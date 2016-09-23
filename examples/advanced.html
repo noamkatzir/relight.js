@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>simple example</title>
+    <style>
+        li.finished {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"/>
+    <script src="../relight.js"></script>
+    <script>
+        class EventEmitter {
+            constructor() {
+                this.listeners = {};
+            }
+
+            addEventListener(eventName, callback) {
+                (eventName || '').split(' ').forEach(name => {
+                    this.listeners[name] = this.listeners[name] || [];
+                    this.listeners[name].push(callback);
+                });
+            }
+
+
+            once(eventName, callback) {
+                var listener = (...params) => {
+                    this.removeEventListener(eventName,listener);
+                    callback(...params);
+                };
+
+                this.addEventListener(eventName, listener);
+            }
+
+            removeEventListener(eventName, callback) {
+                (eventName || '').split(' ').forEach(name => {
+                        if(!Array.isArray(this.listeners[eventName])) return;
+
+                    if(callback) {
+                        var index = this.listeners[eventName].indexOf(callback);
+                        index > -1 && this.listeners[eventName].splice(index,1);
+                    } else {
+                        delete this.listeners[eventName];
+                    }
+                });
+            }
+
+            emit(eventName, ...params) {
+                var listeners = this.listeners[eventName] || [];
+                [...listeners].forEach(listener => listener(...params));
+            }
+        }
+
+        class Component {
+            constructor(componentId) {
+                this.componentId = componentId;
+                this.afterRender = () => {
+                    this.component = getComponentElem(this.componentId);
+                    this.link(this.component);
+                };
+                dispatcher.once('finishedRender', this.afterRender);
+            }
+
+            destroy() {
+                dispatcher.removeEventListener('finishedRender', this.afterRender);
+            }
+        }
+
+
+        class TodosStore extends EventEmitter{
+            constructor() {
+                super();
+                this.nextTodoId=1;
+                this.todos = [];
+            }
+
+            addTodo(todoMission) {
+                var todo = {
+                    id: this.nextTodoId++,
+                    text: todoMission,
+                    pending: true
+                };
+                this.todos.push(todo);
+                this.emit('todoAdded',todo);
+            }
+
+            toggleTodo(todoId) {
+                var todo = this.todos.find(todo => todo.id == todoId);
+                if(todo) {
+                    todo.pending = !todo.pending;
+                    this.emit('toggledTodo',todo);
+                }
+            }
+
+            toggleSelection(todoId) {
+                var todo = this.todos.find(todo => todo.id == todoId);
+                if(todo) {
+                    todo.selection = !todo.selection;
+                }
+            }
+
+            removeSelected() {
+                var todos = this.todos.filter(todo => !todo.selection);
+                if(todos.length != this.todos.length) {
+                    this.todos = todos;
+                    dispatcher.emit('refreshList', this.todos);
+                }
+            }
+
+        }
+
+        class Todo extends Component {
+            constructor({props, componentId}) {
+                super(componentId);
+                this.todo = props;
+                this.listeners = [];
+            }
+
+            link(element) {
+                var checkbox = element.querySelector('input[type=checkbox]');
+                var content = element.querySelector('span');
+                this.listeners = [
+                    {
+                        target: todos,
+                        event: 'toggledTodo',
+                        callback: todo => {if (this.todo.id == todo.id) this.component.classList.toggle('finished', !todo.pending)}
+                    },
+                    {
+                        target: content,
+                        event: 'click',
+                        callback: (event) => dispatcher.emit('toggleToDo',this.todo.id)
+                    },
+                    {
+                        target: checkbox,
+                        event: 'click',
+                        callback: (event) => dispatcher.emit('toggleSelection',this.todo.id)
+                    }
+                ];
+
+                this.listeners.forEach(listener => listener.target.addEventListener(listener.event,listener.callback));
+            }
+
+            destroy() {
+                super.destroy();
+                this.listeners.forEach(listener => listener.target.removeEventListener(listener.event,listener.callback));
+            }
+
+            render() {
+                return `<li class="${!this.todo.pending? 'finished' : ''}"><input type="checkbox"><span>${this.todo.id} - ${this.todo.text}</span></li>`;
+            }
+        }
+
+        class TodoList extends Component {
+            constructor({props, componentId}) {
+                super(componentId);
+            }
+
+            link(element) {
+                this.addButton = element.querySelector('button.add');
+                this.removeButton = element.querySelector('button.remove');
+                this.input = element.querySelector('input');
+                this.list = element.querySelector('.list');
+
+                this.listeners = [
+                    {
+                        target: todos,
+                        event: 'todoAdded',
+                        callback: todo => {
+                            this.list.insertAdjacentHTML('beforeEnd', renderDOM(Todo,todo));
+                            dispatcher.emit('finishedRender');
+                        }
+                    },
+                    {
+                        target: this.addButton,
+                        event: 'click',
+                        callback: (event) => dispatcher.emit('addToDo', this.input.value)
+                    },
+                    {
+                        target: this.removeButton,
+                        event: 'click',
+                        callback: (event) => dispatcher.emit('removeSelected')
+                    },
+                    {
+                        target: dispatcher,
+                        event: 'refreshList',
+                        callback: (todos) => {
+                            destroyComponents(this.component.querySelector('ul.list'));
+                            this.list.insertAdjacentHTML('beforeEnd', this.generateList());
+                            dispatcher.emit('finishedRender');
+                        }
+                    }
+                ];
+
+                this.listeners.forEach(listener => listener.target.addEventListener(listener.event,listener.callback));
+            }
+
+            destroy() {
+                super.destroy();
+                this.addButton = this.removeButton = this.input = this.list = null;
+                this.listeners.forEach(listener => listener.target.removeEventListener(listener.event,listener.callback));
+            }
+
+            generateList() {
+                return todos.todos.map(todo => renderDOM(Todo,todo)).join('');
+            }
+
+            render() {
+                return `<div>
+                            <input />
+                            <button class="add">Add todo</button>
+                            <button class="remove">remove selected todos</button>
+                            <ul class="list">
+                                ${this.generateList()}
+                            </ul>
+                        </div>`;
+            }
+        }
+
+        var dispatcher = new EventEmitter();
+        var todos = new TodosStore();
+
+        dispatcher.addEventListener('toggleToDo', todoId => todos.toggleTodo(todoId));
+        dispatcher.addEventListener('toggleSelection', todoId => todos.toggleSelection(todoId));
+        dispatcher.addEventListener('addToDo', todoText => todos.addTodo(todoText));
+        dispatcher.addEventListener('removeSelected', () => todos.removeSelected());
+        document.body.insertAdjacentHTML('afterBegin',renderDOM(TodoList));
+        dispatcher.emit('finishedRender');
+
+    </script>
+</body>
+</html>

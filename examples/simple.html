@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>simple example</title>
+</head>
+<body>
+    <div id="container"/>
+    <script src="../relight.js"></script>
+    <script>
+        class Post {
+            constructor({props, componentId}) {
+                this.title = props.title;
+                this.body = props.body;
+                this.componentId = componentId;
+            });
+            }
+
+            render() {
+                return `<div>
+				 <header>${this.title}</header>
+				 <content>${this.body}</content>
+				 </div>`;
+            }
+        }
+
+        class Timeline {
+            constructor({props, componentId}) {
+                this.posts = props;
+                this.componentId = componentId;
+            }
+
+            render() {
+                return `<div>
+					${this.posts.map(post => renderDOM(Post,post)).join('')}
+				</div>`;
+            }
+        }
+
+        class AppComponent {
+            constructor(posts,componentId) {
+            }
+
+            render() {
+                return `<div>
+			${renderDOM(Timeline,[
+                    {title: "title 1", body: "body 1"},
+                    {title: "title 1", body: "body 1"},
+                    {title: "title 1", body: "body 1"},
+                    {title: "title 1", body: "body 1"},
+                    {title: "title 1", body: "body 1"}
+                ])}
+
+		${renderDOM(Timeline,[
+                    {title: "title 2", body: "body 2"},
+                    {title: "title 2", body: "body 2"},
+                    {title: "title 2", body: "body 2"},
+                    {title: "title 2", body: "body 2"},
+                    {title: "title 2", body: "body 2"}
+                ])}
+		</div>`
+            }
+        }
+
+        document.body.insertAdjacentHTML('afterBegin',renderDOM(AppComponent));
+    </script>
+</body>
+</html>
