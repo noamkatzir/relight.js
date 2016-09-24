@@ -16,15 +16,14 @@ class Post {
         this.title = props.title;
         this.body = props.body;
         this.componentId = componentId;
-    });
-}
+    }
 
-render() {
-    return `<div>
+    render() {
+        return `<div>
 				 <header>${this.title}</header>
 				 <content>${this.body}</content>
 				 </div>`;
-}
+    }
 }
 
 class Timeline {
@@ -71,7 +70,7 @@ document.body.insertAdjacentHTML('afterBegin',renderDOM(AppComponent));
 the example use ES2015 classes and template string and code look similar to React, however it is vanila javascript
 
 
-# advanced example - lets render build a todo app using "Reactive" architecture
+# advanced example - lets build a todo app using "Reactive" architecture
 ``` javascript
 class EventEmitter {
     constructor() {
