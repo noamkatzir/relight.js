@@ -12,6 +12,7 @@
 <body>
     <script src="../relight.js"></script>
     <script>
+    (function (renderDOM, getComponentElem, destroyComponents) {
         class EventEmitter {
             constructor() {
                 this.listeners = {};
@@ -187,7 +188,11 @@
                     {
                         target: this.addButton,
                         event: 'click',
-                        callback: (event) => dispatcher.emit('addToDo', this.input.value)
+                        callback: (event) => {
+                            dispatcher.emit('addToDo', this.input.value);
+                            this.input.value = '';
+                            this.input.focus();
+                        }
                     },
                     {
                         target: this.removeButton,
@@ -240,7 +245,7 @@
         dispatcher.addEventListener('removeSelected', () => todos.removeSelected());
         document.body.insertAdjacentHTML('afterBegin',renderDOM(TodoList));
         dispatcher.emit('finishedRender');
-
+    })(relight.renderDOM, relight.getComponentElem, relight.destroyComponents);
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-(function (window,document) {
+(function (window, document) {
     var containerExpressions = /^<([^>]+)>(.*)/ig,
         componentsMap = {},
         nextComponentId=1,
@@ -45,11 +45,12 @@
         }
     };
 
-
-    window.renderDOM                = renderDOM;
-    window.getComponentElem         = getComponentElem;
-    window.getComponentElemChildren = getComponentElemChildren;
-    window.getComponentParentElems  = getComponentParentElems;
-    window.destroyComponents        = destroyComponents;
-    window.getComponentByElem       = getComponentByElem;
-})(window,document);
+    window.relight = {
+        renderDOM: renderDOM,
+        getComponentElem: getComponentElem,
+        getComponentElemChildren: getComponentElemChildren,
+        getComponentParentElems: getComponentParentElems,
+        destroyComponents: destroyComponents,
+        getComponentByElem: getComponentByElem
+    };
+})(window, document);
