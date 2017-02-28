@@ -1,4 +1,4 @@
-(function (window,document) {
+(function (window, document) {
     var containerExpressions = /^<([^>]+)>(.*)/ig,
         componentsMap = {},
         nextComponentId=1,
@@ -13,7 +13,7 @@
             result = result.replace(containerExpressions, `<\$1 key="${componentId}">$2`);
             return result;
         };
-    
+
     var getComponentElem = componentId => document.querySelector(`[key=${componentId}]`);
     var getComponentElemChildren = element => element.querySelectorAll(`[key^="comp-"]`);
     var getComponentParentElems = (componentElement,getFirst=false) => {
@@ -33,7 +33,7 @@
         var componentId = componentElement && componentElement.nodeType != 9 && componentElement.getAttribute('key');
         if(typeof componentId == "string" && componentId.startsWith('comp-')) return componentsMap[componentId];
     };
-    
+
     var destroyComponents = element => {
         var i, componentElems = getComponentElemChildren(element);
 
@@ -45,11 +45,12 @@
         }
     };
 
-
-    window.renderDOM                = renderDOM;
-    window.getComponentElem         = getComponentElem;
-    window.getComponentElemChildren = getComponentElemChildren;
-    window.getComponentParentElems  = getComponentParentElems;
-    window.destroyComponents        = destroyComponents;
-    window.getComponentByElem       = getComponentByElem;
-})(window,document);
+    window.relight = {
+        renderDOM,
+        getComponentElem,
+        getComponentElemChildren,
+        getComponentParentElems,
+        destroyComponents,
+        getComponentByElem
+    };
+})(window, document);
