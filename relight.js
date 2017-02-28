@@ -1,4 +1,4 @@
-(function (window, document) {
+const relight = (document,keepComponentInMap) => {
     var containerExpressions = /^<([^>]+)>(.*)/ig,
         componentsMap = {},
         nextComponentId=1,
@@ -8,7 +8,7 @@
                 component = new componentClass({props, componentId }),
                 result = component.render();
 
-            componentsMap[componentId] = component;
+            if (keepComponentInMap !== false) componentsMap[componentId] = component;
 
             result = result.replace(containerExpressions, `<\$1 key="${componentId}">$2`);
             return result;
@@ -45,7 +45,7 @@
         }
     };
 
-    window.relight = {
+    return {
         renderDOM,
         getComponentElem,
         getComponentElemChildren,
@@ -53,4 +53,8 @@
         destroyComponents,
         getComponentByElem
     };
-})(window, document);
+}
+
+
+if (typeof module !== 'undefined' && module.exports) module.exports = relight;
+else window.relight = relight;

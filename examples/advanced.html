@@ -12,7 +12,7 @@
 <body>
     <script src="../relight.js"></script>
     <script>
-    (function (renderDOM, getComponentElem, destroyComponents) {
+        const { renderDOM, getComponentElem, destroyComponents } = relight(document);
         class EventEmitter {
             constructor() {
                 this.listeners = {};
@@ -245,7 +245,6 @@
         dispatcher.addEventListener('removeSelected', () => todos.removeSelected());
         document.body.insertAdjacentHTML('afterBegin',renderDOM(TodoList));
         dispatcher.emit('finishedRender');
-    })(relight.renderDOM, relight.getComponentElem, relight.destroyComponents);
     </script>
 </body>
 </html>

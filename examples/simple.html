@@ -7,7 +7,7 @@
 <body>
     <script src="../relight.js"></script>
     <script>
-    (function (renderDOM) {
+        const { renderDOM } = relight();
         class Post {
             constructor({props, componentId}) {
                 this.title = props.title;
@@ -62,7 +62,6 @@
         }
 
         document.body.insertAdjacentHTML('afterBegin',renderDOM(AppComponent));
-    })(relight.renderDOM);
     </script>
 </body>
 </html>
